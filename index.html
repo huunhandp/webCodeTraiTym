@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Responsive Heart Animation</title>
+
+    <style>
+      html,
+      body {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+        background: #000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .box {
+        width: 100%;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        flex-direction: column;
+      }
+
+      canvas {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+      }
+
+      #pinkboard {
+        position: relative;
+        margin: auto;
+        height: 50vh;
+        width: 50vh;
+        animation: animate 1.3s infinite;
+      }
+
+      #pinkboard:before,
+      #pinkboard:after {
+        content: "";
+        position: absolute;
+        background: #ff5ca4;
+        width: 20vw; /* Adjusted for better proportion */
+        height: 20vw; /* Adjusted for better proportion */
+        border-radius: 50%; /* Ensures circular shapes */
+      }
+
+      #pinkboard:before {
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%) translateY(-50%) rotate(-45deg);
+      }
+
+      #pinkboard:after {
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%) translateY(-50%) rotate(45deg);
+      }
+
+      @keyframes animate {
+        0% {
+          transform: scale(1);
+        }
+        30% {
+          transform: scale(0.8);
+        }
+        60% {
+          transform: scale(1.2);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      /* Centered text block */
+      .center-text {
+        background-image: url(ạnhTinhYeu2.jpg);
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        width: 100vw;
+        height: 100vh;
+        color: rgb(225, 12, 168);
+        font-size: 2vw;
+        font-style: italic;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        animation: backgroundAnimation 3s infinite alternate;
+      }
+
+      /* Animated title */
+      .animated-text {
+        font-size: 3vw;
+        color: rgb(225, 12, 168);
+        position: absolute;
+        top: 20%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        animation: fadeIn 1s;
+      }
+
+      @keyframes fadeIn {
+        0% {
+          opacity: 0;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      @keyframes backgroundAnimation {
+        0% {
+          background-size: 100%;
+        }
+        50% {
+          background-size: 110%;
+        }
+        100% {
+          background-size: 100%;
+        }
+      }
+
+      /* Responsive media queries */
+      @media (max-width: 768px) {
+        #pinkboard {
+          height: 40vh;
+          width: 40vh;
+        }
+        .center-text {
+          font-size: 6vw;
+        }
+        .animated-text {
+          font-size: 5vw;
+        }
+      }
+
+      @media (max-width: 480px) {
+        #pinkboard {
+          height: 30vh;
+          width: 30vh;
+        }
+        .center-text {
+          font-size: 7vw;
+        }
+        .animated-text {
+          font-size: 6vw;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="box">
+      <canvas id="pinkboard"></canvas>
+    </div>
+
+    <div class="center-text">Huỳnh Nhungg</div>
+
+    <div class="animated-text">HAPPY WOMAN EIUUUUUU</div>
+
+    <script>
+      /*
+       * Settings
+       */
+      var settings = {
+        particles: {
+          length: 2000, // maximum amount of particles
+          duration: 2, // particle duration in sec
+          velocity: 100, // particle velocity in pixels/sec
+          effect: -1.3, // play with this for a nice effect
+          size: 13, // particle size in pixels
+        },
+      };
+
+      var Point = (function () {
+        function Point(x, y) {
+          this.x = typeof x !== "undefined" ? x : 0;
+          this.y = typeof y !== "undefined" ? y : 0;
+        }
+        Point.prototype.clone = function () {
+          return new Point(this.x, this.y);
+        };
+        Point.prototype.length = function (length) {
+          if (typeof length == "undefined")
+            return Math.sqrt(this.x * this.x + this.y * this.y);
+          this.normalize();
+          this.x *= length;
+          this.y *= length;
+          return this;
+        };
+        Point.prototype.normalize = function () {
+          var length = this.length();
+          this.x /= length;
+          this.y /= length;
+          return this;
+        };
+        return Point;
+      })();
+
+      /*
+       * Particle class
+       */
+      var Particle = (function () {
+        function Particle() {
+          this.position = new Point();
+          this.velocity = new Point();
+          this.acceleration = new Point();
+          this.age = 0;
+        }
+        Particle.prototype.initialize = function (x, y, dx, dy) {
+          this.position.x = x;
+          this.position.y = y;
+          this.velocity.x = dx;
+          this.velocity.y = dy;
+          this.acceleration.x = dx * settings.particles.effect;
+          this.acceleration.y = dy * settings.particles.effect;
+          this.age = 0;
+        };
+        Particle.prototype.update = function (deltaTime) {
+          this.position.x += this.velocity.x * deltaTime;
+          this.position.y += this.velocity.y * deltaTime;
+          this.velocity.x += this.acceleration.x * deltaTime;
+          this.velocity.y += this.acceleration.y * deltaTime;
+          this.age += deltaTime;
+        };
+        Particle.prototype.draw = function (context, image) {
+          function ease(t) {
+            return --t * t * t + 1;
+          }
+          var size = image.width * ease(this.age / settings.particles.duration);
+          context.globalAlpha = 1 - this.age / settings.particles.duration;
+          context.drawImage(
+            image,
+            this.position.x - size / 2,
+            this.position.y - size / 2,
+            size,
+            size
+          );
+        };
+        return Particle;
+      })();
+
+      /*
+       * Putting it all together
+       */
+      (function (canvas) {
+        var context = canvas.getContext("2d"),
+          particles = new ParticlePool(settings.particles.length),
+          particleRate =
+            settings.particles.length / settings.particles.duration, // particles/sec
+          time;
+
+        // get point on heart with -PI <= t <= PI
+        function pointOnHeart(t) {
+          return new Point(
+            160 * Math.pow(Math.sin(t), 3),
+            130 * Math.cos(t) -
+              50 * Math.cos(2 * t) -
+              20 * Math.cos(3 * t) -
+              10 * Math.cos(4 * t) +
+              25
+          );
+        }
+
+        // creating the particle image using a dummy canvas
+        var image = (function () {
+          var canvas = document.createElement("canvas"),
+            context = canvas.getContext("2d");
+          canvas.width = settings.particles.size;
+          canvas.height = settings.particles.size;
+          // helper function to create the path
+          function to(t) {
+            var point = pointOnHeart(t);
+            point.x =
+              settings.particles.size / 2 +
+              (point.x * settings.particles.size) / 350;
+            point.y =
+              settings.particles.size / 2 -
+              (point.y * settings.particles.size) / 350;
+            return point;
+          }
+          // create the path
+          context.beginPath();
+          var t = -Math.PI;
+          var point = to(t);
+          context.moveTo(point.x, point.y);
+          while (t < Math.PI) {
+            t += 0.05;
+            point = to(t);
+            context.lineTo(point.x, point.y);
+          }
+          context.closePath();
+          // create the fill
+          context.fillStyle = "#ea80b0";
+          context.fill();
+          // create the image
+          var image = new Image();
+          image.src = canvas.toDataURL();
+          return image;
+        })();
+
+        // render that thing!
+        function render() {
+          // next animation frame
+          requestAnimationFrame(render);
+
+          // update time
+          var newTime = new Date().getTime() / 1000,
+            deltaTime = newTime - (time || newTime);
+          time = newTime;
+
+          // clear canvas
+          context.clearRect(0, 0, canvas.width, canvas.height);
+
+          // create new particles
+          var amount = particleRate * deltaTime;
+          for (var i = 0; i < amount; i++) {
+            var pos = pointOnHeart(Math.PI - 2 * Math.PI * Math.random());
+            var dir = pos.clone().length(settings.particles.velocity);
+            particles.add(
+              canvas.width / 2 + pos.x,
+              canvas.height / 2 - pos.y,
+              dir.x,
+              dir.y
+            );
+          }
+
+          // update and draw particles
+          particles.update(deltaTime);
+          particles.draw(context, image);
+        }
+
+        // handle resizing
+        function onResize() {
+          canvas.width = canvas.clientWidth;
+          canvas.height = canvas.clientHeight;
+        }
+        window.onresize = onResize;
+
+        // delay rendering bootstrap
+        setTimeout(function () {
+          onResize();
+          render();
+        }, 10);
+      })(document.getElementById("pinkboard"));
+
+      /*
+       * ParticlePool class
+       */
+      function ParticlePool(length) {
+        this._particles = new Array(length);
+        for (var i = 0; i < this._particles.length; i++)
+          this._particles[i] = new Particle();
+        this._firstActive = 0;
+        this._firstFree = 0;
+        this._duration = settings.particles.duration;
+      }
+
+      ParticlePool.prototype.add = function (x, y, dx, dy) {
+        this._particles[this._firstFree].initialize(x, y, dx, dy);
+
+        // handle circular queue
+        this._firstFree++;
+        if (this._firstFree == this._particles.length) this._firstFree = 0;
+
+        if (this._firstActive == this._firstFree) this._firstActive++;
+        if (this._firstActive == this._particles.length) this._firstActive = 0;
+      };
+
+      ParticlePool.prototype.update = function (deltaTime) {
+        var i;
+
+        // update active particles
+        if (this._firstActive < this._firstFree) {
+          for (i = this._firstActive; i < this._firstFree; i++)
+            this._particles[i].update(deltaTime);
+        }
+        if (this._firstFree < this._firstActive) {
+          for (i = this._firstActive; i < this._particles.length; i++)
+            this._particles[i].update(deltaTime);
+          for (i = 0; i < this._firstFree; i++)
+            this._particles[i].update(deltaTime);
+        }
+
+        // remove inactive particles
+        while (
+          this._particles[this._firstActive].age >= this._duration &&
+          this._firstActive != this._firstFree
+        ) {
+          this._firstActive++;
+          if (this._firstActive == this._particles.length)
+            this._firstActive = 0;
+        }
+      };
+
+      ParticlePool.prototype.draw = function (context, image) {
+        // draw active particles
+        if (this._firstActive < this._firstFree) {
+          for (var i = this._firstActive; i < this._firstFree; i++)
+            this._particles[i].draw(context, image);
+        }
+        if (this._firstFree < this._firstActive) {
+          for (var i = this._firstActive; i < this._particles.length; i++)
+            this._particles[i].draw(context, image);
+          for (var i = 0; i < this._firstFree; i++)
+            this._particles[i].draw(context, image);
+        }
+      };
+    </script>
+  </body>
+</html>
